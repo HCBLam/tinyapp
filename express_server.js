@@ -47,10 +47,9 @@ app.post("/urls", (req, res) => {
   // res.send("Ok");         // Respond with 'Ok' (we will replace this)
   let shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
-  res.redirect('/u/:shortURL');
+  res.redirect(`/urls/${shortURL}`);
 });
 
-console.log(urlDatabase);
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
