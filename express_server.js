@@ -11,6 +11,11 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+function generateRandomString() {
+  let randomString = Math.random().toString(36).slice(7);
+  return randomString;
+}
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -37,28 +42,17 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-function generateRandomString() {
-  Math.random().toString(36).slice(7)
-}
-
 app.post("/urls", (req, res) => {
-  console.log(req.body);  // Log the POST request body to the console
-  res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  // console.log(req.body);  // Log the POST request body to the console
+  // res.send("Ok");         // Respond with 'Ok' (we will replace this)
+  let shortURL = generateRandomString();
+  urlDatabase[shortURL] = req.body.longURL;
+  res.redirect('/u/:shortURL');
 });
 
+console.log(urlDatabase);
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-
-
-// function generateRandomString() {
-//   let randomString = '';
-//   for (let i = 0; i < 6; i++) {
-//     randomString += Math.round(Math.random() * 6).toString();
-//     console.log(`Random number [i]: ${Math.round(Math.random() * 6).toString()}`);
-//   }
-//   return randomString;
-// }
-// generateRandomString()
