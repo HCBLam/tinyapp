@@ -28,43 +28,47 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+// This sends the main '/urls' page with the list of short URLs and long URLs (urls_index).
 app.get('/urls', (req, res) => {
   let templateVars = { urls: urlDatabase };
   res.render('urls_index', templateVars);
 })
 
+// This sends the '/urls/new' page for creating a new short URL (urls_new).
 app.get('/urls/new', (req, res) => {
   res.render('urls_new');
 })
 
+// This sends the 'urls/:shortURL' individual page for each URL (urls_show).
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
   res.render("urls_show", templateVars);
 });
 
+// This creates the new shortURL and adds it to the database; redirects to 'urls/:shortURL'
 app.post("/urls", (req, res) => {
-  // console.log(req.body);  // Log the POST request body to the console
-  // res.send("Ok");         // Respond with 'Ok' (we will replace this)
   let shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect(`/urls/${shortURL}`);
 });
 
+// This redirects to the actual web page of the longURL.
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
   res.redirect(longURL);
 });
 
+// This deletes a URL from the database;
 app.post('/urls/:shortURL/delete', (req, res) => {
-  // const urlToDelete = urlDatabase[req.params.shortURL];
-  // why can't I delete the property using the above variable urlToDelete
   const shortURL = req.params.shortURL;
   delete urlDatabase[shortURL];
   res.redirect('/urls');
 })
 
 
+
+
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
-
