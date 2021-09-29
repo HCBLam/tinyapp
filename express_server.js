@@ -17,12 +17,12 @@ const urlDatabase = {
 
 const users = {
   "userRandomID": {
-    id: "userRandomID",
+    userId: "userRandomID",
     email: "user@example.com",
     password: "purple-monkey-dinosaur"
   },
  "user2RandomID": {
-    id: "user2RandomID",
+    userId: "user2RandomID",
     email: "user2@example.com",
     password: "dishwasher-funk"
   }
@@ -34,30 +34,57 @@ function generateRandomString() {
   return randomString;
 }
 
+const createUser = function(email, password, users) {
+  const userId = generateRandomString();
+  users[userId] = {
+    userId,
+    email,
+    password
+  };
+  return userId;
+};
+
+
 
 // ---------- Routes/Renders ----------
 
 // This is the route for the main '/urls' page with the list of short URLs and long URLs (urls_index).
 app.get('/urls', (req, res) => {
-  const templateVars = { username: req.cookies["username"], urls: urlDatabase };
+  const userId = req.cookies["user_id"];
+  const user = users[userId];
+  let templateVars = {email: undefined, urls: urlDatabase };
+  if (user) {
+    templateVars.email = users[userId].email;
+  }
   res.render('urls_index', templateVars);
 })
 
 // This is the route for the '/urls/new' page for creating a new short URL (urls_new).
 app.get('/urls/new', (req, res) => {
-  const templateVars = { username: req.cookies["username"] };
+  const userId = req.cookies["user_id"];
+  const user = users[userId];
+  let templateVars = {email: undefined};
+  if (user) {
+    templateVars.email = users[userId].email;
+  }
   res.render('urls_new', templateVars);
 })
 
 // This is the route for the 'urls/:shortURL' individual page for each URL (urls_show).
 app.get('/urls/:shortURL', (req, res) => {
-  const templateVars = { username: req.cookies["username"], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
+  const userId = req.cookies["user_id"];
+  const user = users[userId];
+  let templateVars = { email: undefined, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
+  if (user) {
+    templateVars.email = users[userId].email;
+  }
   res.render('urls_show', templateVars);
-});
+  });
 
 // This is the route for the 'urls/register' page for registering new users (urls_register).
 app.get('/register', (req, res) => {
-  const templateVars = { username: req.cookies["username"] };
+  // if there is a user id in the cookie, redirect them to the /urls route
+  const templateVars = { email: undefined };
   res.render('register', templateVars);
 })
 
@@ -105,28 +132,32 @@ app.post('/urls/:shortURL', (req, res) => {
 
 // This handles the login request in the header partial (_header).
 app.post('/login', (req, res) => {
-  res.cookie('username', req.body.username);
+  res.cookie('user_id', userId); // this line will need to be erased or changed
   res.redirect('/urls');
 });
 
+// This handles the logout request in the header partial (_header).
 app.post('/logout', (req, res) => {
-  res.clearCookie('username', req.body.username);
+  res.clearCookie('user_id');
   res.redirect('/urls');
 })
 
+// This registers a new user and adds that user's data to the users database.
 app.post('/register', (req, res) => {
-  const id = generateRandomString();
+  const userId = generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
-  users[id] = {
-      id,
+  users[userId] = {
+      userId,
       email,
       password
     };
-  res.cookie('user_id', users[id]);
+  res.cookie('user_id', userId);
   console.log(users);
   res.redirect('/urls');
 });
+
+
 
 
 

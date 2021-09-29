@@ -14,9 +14,9 @@
     </div>
 
     <!-- If the user is logged in, display the username and a logout button -->
-    <% if (username) { %>
+    <% if (email) { %>
       <form class="form-inline" action="/logout" method="POST">
-        <div class='nav-item nav-link'>Logged In As: <%= username %></div>
+        <div class='nav-item nav-link'>Logged In As: <%= email %></div>
         <button type="submit" class="btn btn-primary" style='color: rgb(25, 25, 25); border-color: rgb(25, 25, 25); background-color: rgb(2, 173, 2)'>Logout</button>
       </form>
 
