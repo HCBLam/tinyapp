@@ -15,6 +15,18 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const users = {
+  "userRandomID": {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk"
+  }
+}
 
 // ---------- Helper Functions ----------
 function generateRandomString() {
@@ -66,7 +78,7 @@ app.get("/urls.json", (req, res) => {
 
 // This creates the new shortURL and adds it to the database; redirects to 'urls/:shortURL'
 app.post("/urls", (req, res) => {
-  let shortURL = generateRandomString();
+  const shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect(`/urls/${shortURL}`);
 });
@@ -101,6 +113,20 @@ app.post('/logout', (req, res) => {
   res.clearCookie('username', req.body.username);
   res.redirect('/urls');
 })
+
+app.post('/register', (req, res) => {
+  const id = generateRandomString();
+  const email = req.body.email;
+  const password = req.body.password;
+  users[id] = {
+      id,
+      email,
+      password
+    };
+  res.cookie('user_id', users[id]);
+  console.log(users);
+  res.redirect('/urls');
+});
 
 
 
