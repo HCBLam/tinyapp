@@ -1,3 +1,5 @@
+<!-- This is the header page, containing the links and login form. -->
+
 <header>
   <nav class="navbar navbar-expand-md navbar-dark bg-success">
     <a class="navbar-brand" href="/urls">TinyApp</a>
@@ -10,5 +12,11 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
+
+        <form class="form-inline" action="/login" method="POST">
+          <input class="form-control" type="text" name="username" placeholder="Username">
+          <button type="submit" class="btn btn-primary" style='color: rgb(25, 25, 25); border-color: rgb(25, 25, 25); background-color: rgb(2, 173, 2)'>Login</button>
+        </form>
+
   </nav>
 </header>
