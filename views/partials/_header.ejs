@@ -1,4 +1,4 @@
-<!-- This is the header page, containing the links and login form. -->
+<!-- This is the header page, containing the links and the login/logout button. -->
 
 <header>
   <nav class="navbar navbar-expand-md navbar-dark bg-success">
@@ -13,10 +13,23 @@
       </div>
     </div>
 
+    <!-- If the user is logged in, display the username and a logout button -->
+    <% if (username) { %>
+      <form class="form-inline" action="/logout" method="POST">
+        <div class='nav-item nav-link'>Logged In As: <%= username %></div>
+        <button type="submit" class="btn btn-primary" style='color: rgb(25, 25, 25); border-color: rgb(25, 25, 25); background-color: rgb(2, 173, 2)'>Logout</button>
+      </form>
+
+      <!-- If the user is NOT logged in, display the login button and input field -->
+      <% } else { %>
         <form class="form-inline" action="/login" method="POST">
           <input class="form-control" type="text" name="username" placeholder="Username">
           <button type="submit" class="btn btn-primary" style='color: rgb(25, 25, 25); border-color: rgb(25, 25, 25); background-color: rgb(2, 173, 2)'>Login</button>
         </form>
+
+    <% } %>
+
+
 
   </nav>
 </header>
