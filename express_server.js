@@ -38,10 +38,16 @@ app.get('/urls/new', (req, res) => {
 })
 
 // This is the route for the 'urls/:shortURL' individual page for each URL (urls_show).
-app.get("/urls/:shortURL", (req, res) => {
+app.get('/urls/:shortURL', (req, res) => {
   const templateVars = { username: req.cookies["username"], shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
-  res.render("urls_show", templateVars);
+  res.render('urls_show', templateVars);
 });
+
+// This is the route for the 'urls/register' page for registering new users (urls_register).
+app.get('/register', (req, res) => {
+  const templateVars = { username: req.cookies["username"] };
+  res.render('register', templateVars);
+})
 
 
 // ---------- Server CRUD Operations ----------
