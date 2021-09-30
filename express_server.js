@@ -11,8 +11,14 @@ app.set('view engine', 'ejs');
 
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {
+    longURL: "http://www.lighthouselabs.ca",
+    userId: 'aJ48lW'
+  },
+  "9sm5xK": {
+    longURL: "http://www.google.com",
+    userId: 'aJ48lW'
+  }
 };
 
 const users = {
@@ -26,13 +32,13 @@ const users = {
     email: "user2@example.com",
     password: "dishwasher-funk"
   }
-}
+};
 
 // ---------- Helper Functions ----------
 function generateRandomString() {
   let randomString = Math.random().toString(36).slice(7);
   return randomString;
-}
+};
 
 // This helper function from Dominic Tremblay's lecture w03d03.
 // It will create a new user object and return the randomly-generated userID string.
@@ -87,7 +93,7 @@ app.get('/urls/new', (req, res) => {
   let templateVars = {email: undefined};
   if (user) {
     templateVars.email = users[userId].email;
-    res.render('urls_new', templateVars);
+    return res.render('urls_new', templateVars);
   }
   res.redirect('/login');
 })
@@ -146,13 +152,14 @@ app.get("/urls.json", (req, res) => {
 // This creates the new shortURL and adds it to the database; redirects to 'urls/:shortURL'
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
+  urlDatabase[shortURL] = { longURL: req.body.longURL, userId: req.cookies['user_id']};
+  console.log(urlDatabase);
   res.redirect(`/urls/${shortURL}`);
 });
 
 // This redirects the shortURL to the actual web page of each longURL.
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
@@ -166,7 +173,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 // This updates a URL from the database.
 app.post('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
-  urlDatabase[shortURL] = req.body.longURL;
+  urlDatabase[shortURL].longURL = req.body.longURL;
   res.redirect(`/urls`);
 })
 
