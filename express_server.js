@@ -1,10 +1,10 @@
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
+
+////////////////////  Middleware ////////////////////
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
-
-// ---------- Middleware Being Used ----------
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 app.set('view engine', 'ejs');
@@ -34,7 +34,7 @@ const users = {
   }
 };
 
-// ---------- Helper Functions ----------
+////////////////////  Helper Functions ////////////////////
 function generateRandomString() {
   let randomString = Math.random().toString(36).slice(7);
   return randomString;
@@ -83,7 +83,7 @@ const urlsForUser = function (currentId) {
 };
 
 
-// ---------- Routes/Renders ----------
+////////////////////  Routes/Renders ////////////////////
 
 // This is the route for the main '/urls' page with the list of short URLs and long URLs (urls_index).
 app.get('/urls', (req, res) => {
@@ -165,7 +165,7 @@ app.get('/login' , (req, res) => {
   res.render('login', templateVars);
 })
 
-// ---------- Server CRUD Operations ----------
+//////////////////// Server CRUD Operations ////////////////////
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -204,14 +204,50 @@ app.get("/u/:shortURL", (req, res) => {
 
 // This deletes a URL from the database.
 app.post('/urls/:shortURL/delete', (req, res) => {
+    const userId = req.cookies["user_id"];
+  const user = users[userId];
+
+  const userUrls = urlsForUser(userId);
+  let templateVars = { user: user, email: undefined, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL};
+
+  if (!user) {
+    res.status(403).send('Please register or login first.');
+    return;
+  }
+
   const shortURL = req.params.shortURL;
+  const urlFile = urlDatabase[shortURL];
+
+  if (urlFile.userId !== userId) {
+    res.status(403).send('Sorry: you do not have access to this Url.');
+    return;
+  }
+
   delete urlDatabase[shortURL];
   res.redirect('/urls');
 })
 
 // This updates a URL from the database.
 app.post('/urls/:shortURL', (req, res) => {
+  const userId = req.cookies["user_id"];
+const user = users[userId];
+
+const userUrls = urlsForUser(userId);
+let templateVars = { user: user, email: undefined, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL};
+
+if (!user) {
+  res.status(403).send('Please register or login first.');
+  return;
+}
+
   const shortURL = req.params.shortURL;
+  const urlFile = urlDatabase[shortURL];
+
+  if (urlFile.userId !== userId) {
+    res.status(403).send('Sorry: you do not have access to this Url.');
+    return;
+  }
+
   urlDatabase[shortURL].longURL = req.body.longURL;
   res.redirect(`/urls`);
 })
@@ -285,7 +321,7 @@ app.post('/register', (req, res) => {
 
 
 
-// ---------- Server Up ----------
+//////////////////// Server Up ////////////////////
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
