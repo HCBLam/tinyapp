@@ -13,7 +13,7 @@
       </div>
     </div>
 
-    <!-- If the user is logged in, display the username and a logout button -->
+    <!-- If the user is logged in, display the user's email and a logout button -->
     <% if (email) { %>
       <form class="form-inline" action="/logout" method="POST">
         <div class='nav-item nav-link'>Logged In As: <%= email %></div>

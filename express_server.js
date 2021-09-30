@@ -58,6 +58,15 @@ const findUserByEmail = function(email, users) {
 };
 
 
+// This helper function from Dominic Tremblay's lecture w03d03.
+const authenticateUser = function(email, password, users) {
+  const userFound = findUserByEmail(email, users);
+  if (userFound && userFound.password == password) {
+    return userFound;
+  }
+  return false;
+}
+
 
 // ---------- Routes/Renders ----------
 
@@ -155,8 +164,29 @@ app.post('/urls/:shortURL', (req, res) => {
 
 // This handles the login request in the header partial (_header).
 app.post('/login', (req, res) => {
-  res.cookie('user_id', userId); // this line will need to be erased or changed
-  res.redirect('/urls');
+  const email = req.body.email;
+  const password = req.body.password;
+
+  // If no valid email or password is entered...
+  if (!email || !password) {
+    res.status(400).send('Pleae enter a valid email and/or password.');
+  }
+
+  const user = authenticateUser(email, password, users);
+
+  // If the user is not found, or the email and password don't match...
+  if (!user) {
+    res.status(403).send('Sorry: the email and password do not match.');
+  }
+
+  if (user) {
+    // console.log(user);
+    // console.log(user.userId)
+    res.cookie('user_id', user.userId);
+    res.redirect('/urls');
+
+  }
+
 });
 
 // This handles the logout request in the header partial (_header).
