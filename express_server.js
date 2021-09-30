@@ -94,13 +94,23 @@ app.get('/urls/:shortURL', (req, res) => {
   res.render('urls_show', templateVars);
   });
 
-// This is the route for the 'urls/register' page for registering new users (urls_register).
+// This is the route for the '/register' page for registering new users (register.ejs).
 app.get('/register', (req, res) => {
   // if there is a user id in the cookie, redirect them to the /urls route
   const templateVars = { email: undefined };
   res.render('register', templateVars);
 })
 
+// This is the route for the dedicated '/login' page (login.ejs).
+app.get('/login' , (req, res) => {
+  const userId = req.cookies["user_id"];
+  const user = users[userId];
+  let templateVars = { email: undefined, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
+  if (user) {
+    templateVars.email = users[userId].email;
+  }
+  res.render('login', templateVars);
+})
 
 // ---------- Server CRUD Operations ----------
 
