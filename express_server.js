@@ -87,8 +87,9 @@ app.get('/urls/new', (req, res) => {
   let templateVars = {email: undefined};
   if (user) {
     templateVars.email = users[userId].email;
+    res.render('urls_new', templateVars);
   }
-  res.render('urls_new', templateVars);
+  res.redirect('/login');
 })
 
 // This is the route for the 'urls/:shortURL' individual page for each URL (urls_show).
