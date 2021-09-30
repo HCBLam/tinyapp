@@ -57,7 +57,6 @@ const findUserByEmail = function(email, users) {
   return false;
 };
 
-
 // This helper function from Dominic Tremblay's lecture w03d03.
 const authenticateUser = function(email, password, users) {
   const userFound = findUserByEmail(email, users);
@@ -106,9 +105,16 @@ app.get('/urls/:shortURL', (req, res) => {
 // This is the route for the '/register' page for registering new users (register.ejs).
 app.get('/register', (req, res) => {
   // if there is a user id in the cookie, redirect them to the /urls route
+  const userId = req.cookies['user_id'];
+  const user = users[userId];
   const templateVars = { email: undefined };
+  if (user) {
+    templateVars.email = users[userId].email;
+    res.redirect('urls');
+  }
   res.render('register', templateVars);
 })
+
 
 // This is the route for the dedicated '/login' page (login.ejs).
 app.get('/login' , (req, res) => {
@@ -117,6 +123,7 @@ app.get('/login' , (req, res) => {
   let templateVars = { email: undefined, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
   if (user) {
     templateVars.email = users[userId].email;
+    res.redirect('urls');
   }
   res.render('login', templateVars);
 })
