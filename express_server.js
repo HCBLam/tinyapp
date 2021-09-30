@@ -102,7 +102,7 @@ app.get('/urls/new', (req, res) => {
 app.get('/urls/:shortURL', (req, res) => {
   const userId = req.cookies["user_id"];
   const user = users[userId];
-  let templateVars = { email: undefined, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
+  let templateVars = { email: undefined, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL};
   if (user) {
     templateVars.email = users[userId].email;
   }
@@ -157,9 +157,18 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
-// This redirects the shortURL to the actual web page of each longURL.
+// !!!!! This redirects the shortURL to the actual web page of each longURL.
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL].longURL;
+  const shortURL = req.params.shortURL;
+  const longURL = urlDatabase[shortURL].longURL;
+
+  if (!urlDatabase[shortURL]) {
+    return res.status(404).send('Sorry: the shortURL you have entered is invalid.');
+  }
+
+  // if (!longURL) {
+  //   return res.status(404).send('Sorry: the requested URL cannot be found.');
+  // }
   res.redirect(longURL);
 });
 
