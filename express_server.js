@@ -70,7 +70,17 @@ const authenticateUser = function(email, password, users) {
     return userFound;
   }
   return false;
-}
+};
+
+const urlsForUser = function (currentId) {
+  let userUrls = {};
+  for (let url in urlDatabase) {
+    if (urlDatabase[url]['userId'] === currentId) {
+      userUrls[url] = urlDatabase[url];
+    }
+  }
+  return userUrls;
+};
 
 
 // ---------- Routes/Renders ----------
@@ -79,10 +89,16 @@ const authenticateUser = function(email, password, users) {
 app.get('/urls', (req, res) => {
   const userId = req.cookies["user_id"];
   const user = users[userId];
-  let templateVars = {email: undefined, urls: urlDatabase };
-  if (user) {
-    templateVars.email = users[userId].email;
+
+  const userUrls = urlsForUser(userId);
+  let templateVars = { user: user, email: undefined, urls: userUrls };
+
+  if (!user) {
+    // change this line so that users who are not logged in can be redirected to the login page instead
+    res.status(403).send('Please register or login first.');
+    return;
   }
+  templateVars.email = users[userId].email;
   res.render('urls_index', templateVars);
 })
 
@@ -98,14 +114,28 @@ app.get('/urls/new', (req, res) => {
   res.redirect('/login');
 })
 
-// This is the route for the 'urls/:shortURL' individual page for each URL (urls_show).
+// !!!! This is the route for the 'urls/:shortURL' individual page for each URL (urls_show).
 app.get('/urls/:shortURL', (req, res) => {
   const userId = req.cookies["user_id"];
   const user = users[userId];
-  let templateVars = { email: undefined, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL};
-  if (user) {
-    templateVars.email = users[userId].email;
+
+  const userUrls = urlsForUser(userId);
+  let templateVars = { user: user, email: undefined, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL};
+
+  if (!user) {
+    res.status(403).send('Please register or login first.');
+    return;
   }
+
+  const shortURL = req.params.shortURL;
+  const urlFile = urlDatabase[shortURL];
+
+  if (urlFile.userId !== userId) {
+    res.status(403).send('Sorry: you do not have access to this Url.');
+    return;
+  }
+
+  templateVars.email = users[userId].email;
   res.render('urls_show', templateVars);
   });
 
@@ -153,11 +183,11 @@ app.get("/urls.json", (req, res) => {
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = { longURL: req.body.longURL, userId: req.cookies['user_id']};
-  console.log(urlDatabase);
+  // console.log(urlDatabase);
   res.redirect(`/urls/${shortURL}`);
 });
 
-// !!!!! This redirects the shortURL to the actual web page of each longURL.
+// This redirects the shortURL to the actual web page of each longURL.
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   const longURL = urlDatabase[shortURL].longURL;
@@ -247,7 +277,7 @@ app.post('/register', (req, res) => {
   // const userId  = createUser(email, password, users);
 
   res.cookie('user_id', userId);
-  console.log(users);
+  // console.log(users);
   res.redirect('/urls');
 });
 
