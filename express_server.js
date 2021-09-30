@@ -34,14 +34,27 @@ function generateRandomString() {
   return randomString;
 }
 
+// This helper function from Dominic Tremblay's lecture w03d03.
+// It will create a new user object and return the randomly-generated userID string.
 const createUser = function(email, password, users) {
   const userId = generateRandomString();
   users[userId] = {
     userId,
     email,
     password
-  };
+  }
   return userId;
+};
+
+// This helper function from Dominic Tremblay's lecture w03d03.
+const findUserByEmail = function(email, users) {
+  for (let userId in users) {
+    const user = users[userId];
+      if (email === user.email) {
+        return user;
+      }
+  }
+  return false;
 };
 
 
@@ -147,11 +160,28 @@ app.post('/register', (req, res) => {
   const userId = generateRandomString();
   const email = req.body.email;
   const password = req.body.password;
+
+  // If no valid email or password is entered...
+  if (!email || !password) {
+    res.status(400).send('Pleae enter a valid email and/or password.');
+  }
+
+  // If the user (based on email) is already in the database...
+  const userFound = findUserByEmail(email, users);
+    if (userFound) {
+      res.status(400).send('This user is already registered.');
+    }
+
+  // Create a new user entry in the users database and return the userId.
   users[userId] = {
       userId,
       email,
       password
     };
+
+  // Using a helper function to create a new user entry in the users database and return the userId.
+  // const userId  = createUser(email, password, users);
+
   res.cookie('user_id', userId);
   console.log(users);
   res.redirect('/urls');
