@@ -92,7 +92,7 @@ const urlsForUser = function (currentId) {
 
 // This is the route for the main '/urls' page with the list of short URLs and long URLs (urls_index).
 app.get('/urls', (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   const user = users[userId];
 
   const userUrls = urlsForUser(userId);
@@ -109,7 +109,7 @@ app.get('/urls', (req, res) => {
 
 // This is the route for the '/urls/new' page for creating a new short URL (urls_new).
 app.get('/urls/new', (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   const user = users[userId];
   let templateVars = {email: undefined};
   if (user) {
@@ -121,7 +121,7 @@ app.get('/urls/new', (req, res) => {
 
 // !!!! This is the route for the 'urls/:shortURL' individual page for each URL (urls_show).
 app.get('/urls/:shortURL', (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   const user = users[userId];
 
   const userUrls = urlsForUser(userId);
@@ -147,7 +147,7 @@ app.get('/urls/:shortURL', (req, res) => {
 // This is the route for the '/register' page for registering new users (register.ejs).
 app.get('/register', (req, res) => {
   // if there is a user id in the cookie, redirect them to the /urls route
-  const userId = req.cookies['user_id'];
+  const userId = req.session.user_id;
   const user = users[userId];
   const templateVars = { email: undefined };
   if (user) {
@@ -159,7 +159,7 @@ app.get('/register', (req, res) => {
 
 // This is the route for the dedicated '/login' page (login.ejs).
 app.get('/login' , (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
   const user = users[userId];
   let templateVars = { email: undefined, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
   if (user) {
@@ -186,7 +186,7 @@ app.get("/urls.json", (req, res) => {
 // This creates the new shortURL and adds it to the database; redirects to 'urls/:shortURL'
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = { longURL: req.body.longURL, userId: req.cookies['user_id']};
+  urlDatabase[shortURL] = { longURL: req.body.longURL, userId: req.session.user_id};
   // console.log(urlDatabase);
   res.redirect(`/urls/${shortURL}`);
 });
@@ -208,7 +208,7 @@ app.get("/u/:shortURL", (req, res) => {
 
 // This deletes a URL from the database.
 app.post('/urls/:shortURL/delete', (req, res) => {
-    const userId = req.cookies["user_id"];
+    const userId = req.session.user_id;
   const user = users[userId];
 
   const userUrls = urlsForUser(userId);
@@ -233,7 +233,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 
 // This updates a URL from the database.
 app.post('/urls/:shortURL', (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session.user_id;
 const user = users[userId];
 
 const userUrls = urlsForUser(userId);
@@ -276,7 +276,7 @@ app.post('/login', (req, res) => {
   if (user) {
     // console.log(user);
     // console.log(user.userId)
-    res.cookie('user_id', user.userId);
+    req.session.user_id = user.userId;
     res.redirect('/urls');
 
   }
@@ -285,7 +285,7 @@ app.post('/login', (req, res) => {
 
 // This handles the logout request in the header partial (_header).
 app.post('/logout', (req, res) => {
-  res.clearCookie('user_id');
+  req.session = null;
   res.redirect('/urls');
 })
 
@@ -317,7 +317,7 @@ app.post('/register', (req, res) => {
   // Using a helper function to create a new user entry in the users database and return the userId.
   // const userId  = createUser(email, password, users);
 
-  res.cookie('user_id', userId);
+  req.session.user_id = userId;
   // console.log(users);
   res.redirect('/urls');
 });
