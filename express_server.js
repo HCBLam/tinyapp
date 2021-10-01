@@ -4,12 +4,16 @@ const PORT = 8080; // default port 8080
 
 ////////////////////  Middleware ////////////////////
 const bodyParser = require("body-parser");
-const cookieParser = require('cookie-parser');
+// const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
-app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser());
+const cookieSession = require('cookie-session');
 app.set('view engine', 'ejs');
-
+app.use(bodyParser.urlencoded({extended: true}));
+// app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['Just trying to survive bootcamp', 'Brain fatigue from staring at a screen for 14 hours a day']
+}));
 
 const urlDatabase = {
   "b2xVn2": {
