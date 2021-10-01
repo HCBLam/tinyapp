@@ -1,5 +1,4 @@
-  <!-- This is the main page /urls that displays the list of short and long URLs. -->
-  <!-- So far it contains: short and long URL lists, delete button, and edit button. -->
+  <!-- MAIN URLS PAGE -->
 
 <!DOCTYPE html>
 <html lang="en">
@@ -29,14 +28,14 @@
         </tr>
       </thead>
       <tbody>
-        <!-- This section generates the list of short and long URLs from the urlDatabase on the server file-->
+
+        <!-- LIST OF USER'S URLS -->
         <% for(let url in urls) { %>
           <tr>
             <td><%= url %></td>
             <td><%= urls[url].longURL %></td>
 
             <td>
-              <!-- This adds the edit button on the /urls page; edit button will redirect to the URL's individual page -->
               <form class="edit-button" action="/urls/<%=url%>" method="GET">
                 <div class="form-group mb-2">
                   <button type="submit" class="btn btn-primary" style='color: blue; border-color: blue; background-color: white'>Edit</button>
@@ -45,16 +44,15 @@
             </td>
 
             <td>
-              <!-- This adds the delete button on the /urls page  -->
               <form class="delete-button" action="/urls/<%=url%>/delete" method="POST">
                 <div class="form-group mb-2">
                   <button type="submit" class="btn btn-primary" style='color: red; border-color: red; background-color: white'>Delete</button>
                 </div>
               </form>
             </td>
-
           </tr>
         <% } %>
+
       </tbody>
     </table>
   </main>

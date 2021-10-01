@@ -1,21 +1,23 @@
+////////////////////  SERVER  ////////////////////
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 const helpers = require('./helpers');
 
-////////////////////  Middleware ////////////////////
+
+////////////////////  MIDDLEWARE  ////////////////////
 const bodyParser = require("body-parser");
-// const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
 const cookieSession = require('cookie-session');
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
-// app.use(cookieParser());
 app.use(cookieSession({
   name: 'session',
-  keys: ['Just trying to survive bootcamp', 'Brain fatigue from staring at a screen for 14 hours a day']
+  keys: ['I live and breathe bootcamp', 'Midnight coding brain fatigue']
 }));
 
+
+////////////////////  DATABASES  ////////////////////
 const urlDatabase = {
   "b2xVn2": {
     longURL: "http://www.lighthouselabs.ca",
@@ -41,131 +43,69 @@ const users = {
 };
 
 
-////////////////////  Routes/Renders ////////////////////
-
-// This is the route for the main '/urls' page with the list of short URLs and long URLs (urls_index).
-app.get('/urls', (req, res) => {
-  const userId = req.session.user_id;
-  const user = users[userId];
-
-  const userUrls = helpers.urlsForUser(userId, urlDatabase);
-  let templateVars = { user: user, email: undefined, urls: userUrls };
-
-  if (!user) {
-    // change this line so that users who are not logged in can be redirected to the login page instead
-    res.status(403).send('Please register or login first.');
-    return;
-  }
-  templateVars.email = users[userId].email;
-  res.render('urls_index', templateVars);
-})
-
-// This is the route for the '/urls/new' page for creating a new short URL (urls_new).
-app.get('/urls/new', (req, res) => {
-  const userId = req.session.user_id;
-  const user = users[userId];
-  let templateVars = {email: undefined};
-  if (user) {
-    templateVars.email = users[userId].email;
-    return res.render('urls_new', templateVars);
-  }
-  res.redirect('/login');
-})
-
-// !!!! This is the route for the 'urls/:shortURL' individual page for each URL (urls_show).
-app.get('/urls/:shortURL', (req, res) => {
-  const userId = req.session.user_id;
-  const user = users[userId];
-
-  const userUrls = helpers.urlsForUser(userId, urlDatabase);
-  let templateVars = { user: user, email: undefined, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL};
-
-  if (!user) {
-    res.status(403).send('Please register or login first.');
-    return;
-  }
-
-  const shortURL = req.params.shortURL;
-  const urlFile = urlDatabase[shortURL];
-
-  if (urlFile.userId !== userId) {
-    res.status(403).send('Sorry: you do not have access to this Url.');
-    return;
-  }
-
-  templateVars.email = users[userId].email;
-  res.render('urls_show', templateVars);
-  });
-
-// This is the route for the '/register' page for registering new users (register.ejs).
-app.get('/register', (req, res) => {
-  // if there is a user id in the cookie, redirect them to the /urls route
-  const userId = req.session.user_id;
-  const user = users[userId];
-  const templateVars = { email: undefined };
-  if (user) {
-    templateVars.email = users[userId].email;
-    res.redirect('urls');
-  }
-  res.render('register', templateVars);
-})
-
-// This is the route for the dedicated '/login' page (login.ejs).
-app.get('/login' , (req, res) => {
-  const userId = req.session.user_id;
-  const user = users[userId];
-  let templateVars = { email: undefined, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
-  if (user) {
-    templateVars.email = users[userId].email;
-    res.redirect('urls');
-  }
-  res.render('login', templateVars);
-})
-
-//////////////////// Server CRUD Operations ////////////////////
-
+////////////////////  SETTING UP ROUTES  ////////////////////
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  res.redirect('/login');
 });
 
 app.get('/hello', (req, res) => {
   res.send('<html><body>Hello <b>World</b></body></html>\n');
-})
+});
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-// This creates the new shortURL and adds it to the database; redirects to 'urls/:shortURL'
-app.post("/urls", (req, res) => {
-  const shortURL = helpers.generateRandomString();
-  urlDatabase[shortURL] = { longURL: req.body.longURL, userId: req.session.user_id};
-  // console.log(urlDatabase);
-  res.redirect(`/urls/${shortURL}`);
-});
 
-// This redirects the shortURL to the actual web page of each longURL.
-app.get("/u/:shortURL", (req, res) => {
-  const shortURL = req.params.shortURL;
-  const longURL = urlDatabase[shortURL].longURL;
-
-  if (!urlDatabase[shortURL]) {
-    return res.status(404).send('Sorry: the shortURL you have entered is invalid.');
-  }
-
-  // if (!longURL) {
-  //   return res.status(404).send('Sorry: the requested URL cannot be found.');
-  // }
-  res.redirect(longURL);
-});
-
-// This deletes a URL from the database.
-app.post('/urls/:shortURL/delete', (req, res) => {
-    const userId = req.session.user_id;
+//--- MyURLs route ===> (urls_index).
+app.get('/urls', (req, res) => {
+  const userId = req.session.user_id;
   const user = users[userId];
 
   const userUrls = helpers.urlsForUser(userId, urlDatabase);
-  let templateVars = { user: user, email: undefined, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL};
+  let templateVars = {
+    user: user,
+    email: undefined,
+    urls: userUrls
+  };
+
+  if (!user) {
+    res.status(403).send('Please register or login first.');
+    return;
+  };
+
+  templateVars.email = users[userId].email;
+  res.render('urls_index', templateVars);
+});
+
+
+//--- New ShortURL route ===> (urls_new).
+app.get('/urls/new', (req, res) => {
+  const userId = req.session.user_id;
+  const user = users[userId];
+
+  let templateVars = {email: undefined};
+
+  if (user) {
+    templateVars.email = users[userId].email;
+    return res.render('urls_new', templateVars);
+  };
+
+  res.redirect('/login');
+});
+
+
+//--- Edit ShortURL route ===> (urls_show).
+app.get('/urls/:shortURL', (req, res) => {
+  const userId = req.session.user_id;
+  const user = users[userId];
+
+  const userUrls = helpers.urlsForUser(userId, urlDatabase);
+  let templateVars = {
+    user: user,
+    email: undefined,
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL].longURL};
 
   if (!user) {
     res.status(403).send('Please register or login first.');
@@ -176,89 +116,182 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   const urlFile = urlDatabase[shortURL];
 
   if (urlFile.userId !== userId) {
-    res.status(403).send('Sorry: you do not have access to this Url.');
+    res.status(403).send('Sorry - you do not have access to this Url.');
     return;
   }
 
-  delete urlDatabase[shortURL];
-  res.redirect('/urls');
-})
+  templateVars.email = users[userId].email;
+  res.render('urls_show', templateVars);
+});
 
-// This updates a URL from the database.
-app.post('/urls/:shortURL', (req, res) => {
+
+//--- Register Route ===> (register.ejs).
+app.get('/register', (req, res) => {
   const userId = req.session.user_id;
-const user = users[userId];
+  const user = users[userId];
+  const templateVars = { email: undefined };
 
-const userUrls = helpers.urlsForUser(userId, urlDatabase);
-let templateVars = { user: user, email: undefined, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL};
+  if (user) {
+    templateVars.email = users[userId].email;
+    res.redirect('urls');
+  };
 
-if (!user) {
-  res.status(403).send('Please register or login first.');
-  return;
-}
+  res.render('register', templateVars);
+});
+
+
+//--- Login Route ===> (login.ejs).
+app.get('/login' , (req, res) => {
+  const userId = req.session.user_id;
+  const user = users[userId];
+  let templateVars = {
+    email: undefined,
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL]};
+
+  if (user) {
+    templateVars.email = users[userId].email;
+    res.redirect('urls');
+  };
+
+  res.render('login', templateVars);
+});
+
+
+//////////////////// CRUD OPERATIONS ////////////////////
+
+
+//--- Create new shortURL
+app.post("/urls", (req, res) => {
+  const shortURL = helpers.generateRandomString();
+  urlDatabase[shortURL] = {
+    longURL: req.body.longURL,
+    userId: req.session.user_id};
+
+  res.redirect(`/urls/${shortURL}`);
+});
+
+
+//--- Link to shortURL websites
+app.get("/u/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL;
+  const longURL = urlDatabase[shortURL].longURL;
+
+  if (!urlDatabase[shortURL]) {
+    return res.status(404).send('Sorry - the shortURL you have entered is invalid.');
+  };
+
+  res.redirect(longURL);
+});
+
+
+//--- Delete URL
+app.post('/urls/:shortURL/delete', (req, res) => {
+    const userId = req.session.user_id;
+  const user = users[userId];
+
+  const userUrls = helpers.urlsForUser(userId, urlDatabase);
+  let templateVars = {
+    user: user,
+    email: undefined,
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL].longURL};
+
+  if (!user) {
+    res.status(403).send('Please register or login first.');
+    return;
+  };
 
   const shortURL = req.params.shortURL;
   const urlFile = urlDatabase[shortURL];
 
   if (urlFile.userId !== userId) {
-    res.status(403).send('Sorry: you do not have access to this Url.');
+    res.status(403).send('Sorry - you do not have access to this Url.');
+    return;
+  };
+
+  delete urlDatabase[shortURL];
+  res.redirect('/urls');
+});
+
+
+//--- Update URL
+app.post('/urls/:shortURL', (req, res) => {
+  const userId = req.session.user_id;
+  const user = users[userId];
+
+  const userUrls = helpers.urlsForUser(userId, urlDatabase);
+  let templateVars = {
+    user: user,
+    email: undefined,
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL].longURL};
+
+  if (!user) {
+    res.status(403).send('Please register or login first.');
     return;
   }
 
+  const shortURL = req.params.shortURL;
+  const urlFile = urlDatabase[shortURL];
+
+  if (urlFile.userId !== userId) {
+    res.status(403).send('Sorry - you do not have access to this Url.');
+    return;
+  };
+
   urlDatabase[shortURL].longURL = req.body.longURL;
   res.redirect(`/urls`);
-})
+});
 
-// This handles the login request in the header partial (_header).
+
+//--- Login user
 app.post('/login', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
-  // If no valid email or password is entered...
+  // If no valid email or password is entered
   if (!email || !password) {
     res.status(400).send('Pleae enter a valid email and/or password.');
-  }
+  };
 
   const user = helpers.authenticateUser(email, password, users);
 
-  // If the user is not found, or the email and password don't match...
+  // If the user is not found, or the email and password don't match
   if (!user) {
     res.status(403).send('Sorry: the email and password do not match.');
-  }
+  };
 
   if (user) {
-    // console.log(user);
-    // console.log(user.userId)
     req.session.user_id = user.userId;
     res.redirect('/urls');
-
-  }
-
+  };
 });
 
-// This handles the logout request in the header partial (_header).
+
+//--- Logout user
 app.post('/logout', (req, res) => {
   req.session = null;
-  res.redirect('/urls');
-})
+  res.redirect('/login');
+});
 
-// This registers a new user and adds that user's data to the users database.
+
+//--- Register new user
 app.post('/register', (req, res) => {
   const userId = helpers.generateRandomString();
   const email = req.body.email;
   const password = bcrypt.hashSync(req.body.password, 10);
-  console.log('Hashed Password: ', password)
 
-  // If no valid email or password is entered...
+  // If no valid email or password is entered
   if (!email || !password) {
     res.status(400).send('Pleae enter a valid email and/or password.');
-  }
+  };
 
-  // If the user (based on email) is already in the database...
+  // If the user (based on email) is already in the database
   const userFound = helpers.getUserByEmail(email, users);
     if (userFound) {
       res.status(400).send('This user is already registered.');
-    }
+    };
 
   // Create a new user entry in the users database and return the userId.
   users[userId] = {
@@ -267,16 +300,9 @@ app.post('/register', (req, res) => {
       password
     };
 
-  // Using a helper function to create a new user entry in the users database and return the userId.
-  // const userId  = createUser(email, password, users);
-
   req.session.user_id = userId;
-  // console.log(users);
   res.redirect('/urls');
 });
-
-
-
 
 
 //////////////////// Server Up ////////////////////
