@@ -65,9 +65,9 @@ const findUserByEmail = function(email, users) {
 };
 
 // This helper function from Dominic Tremblay's lecture w03d03.
-const authenticateUser = function(email, password, users) {
+const authenticateUser = function(email, passwordAttempt, users) {
   const userFound = findUserByEmail(email, users);
-  if (userFound && userFound.password == password) {
+  if (userFound && bcrypt.compareSync(passwordAttempt, userFound.password)) {
     return userFound;
   }
   return false;
@@ -289,7 +289,8 @@ app.post('/logout', (req, res) => {
 app.post('/register', (req, res) => {
   const userId = generateRandomString();
   const email = req.body.email;
-  const password = req.body.password;
+  const password = bcrypt.hashSync(req.body.password, 10);
+  console.log('Hashed Password: ', password)
 
   // If no valid email or password is entered...
   if (!email || !password) {
