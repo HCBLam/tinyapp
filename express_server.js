@@ -5,6 +5,7 @@ const PORT = 8080; // default port 8080
 ////////////////////  Middleware ////////////////////
 const bodyParser = require("body-parser");
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcryptjs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 app.set('view engine', 'ejs');
@@ -151,7 +152,6 @@ app.get('/register', (req, res) => {
   }
   res.render('register', templateVars);
 })
-
 
 // This is the route for the dedicated '/login' page (login.ejs).
 app.get('/login' , (req, res) => {
