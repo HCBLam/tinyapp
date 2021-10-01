@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
+const helpers = require('./helpers');
 
 ////////////////////  Middleware ////////////////////
 const bodyParser = require("body-parser");
@@ -39,54 +40,6 @@ const users = {
   }
 };
 
-////////////////////  Helper Functions ////////////////////
-function generateRandomString() {
-  let randomString = Math.random().toString(36).slice(7);
-  return randomString;
-};
-
-// This helper function from Dominic Tremblay's lecture w03d03.
-// It will create a new user object and return the randomly-generated userID string.
-const createUser = function(email, password, users) {
-  const userId = generateRandomString();
-  users[userId] = {
-    userId,
-    email,
-    password
-  }
-  return userId;
-};
-
-// This helper function from Dominic Tremblay's lecture w03d03.
-const findUserByEmail = function(email, users) {
-  for (let userId in users) {
-    const user = users[userId];
-      if (email === user.email) {
-        return user;
-      }
-  }
-  return false;
-};
-
-// This helper function from Dominic Tremblay's lecture w03d03.
-const authenticateUser = function(email, passwordAttempt, users) {
-  const userFound = findUserByEmail(email, users);
-  if (userFound && bcrypt.compareSync(passwordAttempt, userFound.password)) {
-    return userFound;
-  }
-  return false;
-};
-
-const urlsForUser = function (currentId) {
-  let userUrls = {};
-  for (let url in urlDatabase) {
-    if (urlDatabase[url]['userId'] === currentId) {
-      userUrls[url] = urlDatabase[url];
-    }
-  }
-  return userUrls;
-};
-
 
 ////////////////////  Routes/Renders ////////////////////
 
@@ -95,7 +48,7 @@ app.get('/urls', (req, res) => {
   const userId = req.session.user_id;
   const user = users[userId];
 
-  const userUrls = urlsForUser(userId);
+  const userUrls = helpers.urlsForUser(userId, urlDatabase);
   let templateVars = { user: user, email: undefined, urls: userUrls };
 
   if (!user) {
@@ -124,7 +77,7 @@ app.get('/urls/:shortURL', (req, res) => {
   const userId = req.session.user_id;
   const user = users[userId];
 
-  const userUrls = urlsForUser(userId);
+  const userUrls = helpers.urlsForUser(userId, urlDatabase);
   let templateVars = { user: user, email: undefined, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL};
 
   if (!user) {
@@ -185,7 +138,7 @@ app.get("/urls.json", (req, res) => {
 
 // This creates the new shortURL and adds it to the database; redirects to 'urls/:shortURL'
 app.post("/urls", (req, res) => {
-  const shortURL = generateRandomString();
+  const shortURL = helpers.generateRandomString();
   urlDatabase[shortURL] = { longURL: req.body.longURL, userId: req.session.user_id};
   // console.log(urlDatabase);
   res.redirect(`/urls/${shortURL}`);
@@ -211,7 +164,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
     const userId = req.session.user_id;
   const user = users[userId];
 
-  const userUrls = urlsForUser(userId);
+  const userUrls = helpers.urlsForUser(userId, urlDatabase);
   let templateVars = { user: user, email: undefined, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL};
 
   if (!user) {
@@ -236,7 +189,7 @@ app.post('/urls/:shortURL', (req, res) => {
   const userId = req.session.user_id;
 const user = users[userId];
 
-const userUrls = urlsForUser(userId);
+const userUrls = helpers.urlsForUser(userId, urlDatabase);
 let templateVars = { user: user, email: undefined, shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL};
 
 if (!user) {
@@ -266,7 +219,7 @@ app.post('/login', (req, res) => {
     res.status(400).send('Pleae enter a valid email and/or password.');
   }
 
-  const user = authenticateUser(email, password, users);
+  const user = helpers.authenticateUser(email, password, users);
 
   // If the user is not found, or the email and password don't match...
   if (!user) {
@@ -291,7 +244,7 @@ app.post('/logout', (req, res) => {
 
 // This registers a new user and adds that user's data to the users database.
 app.post('/register', (req, res) => {
-  const userId = generateRandomString();
+  const userId = helpers.generateRandomString();
   const email = req.body.email;
   const password = bcrypt.hashSync(req.body.password, 10);
   console.log('Hashed Password: ', password)
@@ -302,7 +255,7 @@ app.post('/register', (req, res) => {
   }
 
   // If the user (based on email) is already in the database...
-  const userFound = findUserByEmail(email, users);
+  const userFound = helpers.getUserByEmail(email, users);
     if (userFound) {
       res.status(400).send('This user is already registered.');
     }
