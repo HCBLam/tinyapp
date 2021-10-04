@@ -21,29 +21,9 @@ app.use(cookieSession({
 
 //////////////////////////////////////  DATABASES  //////////////////////////////////////
 
-const urlDatabase = {
-  // "b2xVn2": {
-  //   longURL: "http://www.lighthouselabs.ca",
-  //   userId: 'aJ48lW'
-  // },
-  // "9sm5xK": {
-  //   longURL: "http://www.google.com",
-  //   userId: 'aJ48lW'
-  // }
-};
+const urlDatabase = {};
 
-const users = {
-//   "userRandomID": {
-//     userId: "userRandomID",
-//     email: "user@example.com",
-//     password: "purple-monkey-dinosaur"
-//   },
-//  "user2RandomID": {
-//     userId: "user2RandomID",
-//     email: "user2@example.com",
-//     password: "dishwasher-funk"
-//   }
-};
+const users = {};
 
 
 /////////////////////////////////////  GET REQUESTS  ////////////////////////////////////
@@ -52,14 +32,6 @@ const users = {
 app.get("/", (req, res) => {
   res.redirect('/login');
 });
-
-// app.get('/hello', (req, res) => {
-//   res.send('<html><body>Hello <b>World</b></body></html>\n');
-// });
-
-// app.get("/urls.json", (req, res) => {
-//   res.json(urlDatabase);
-// });
 
 
 
@@ -94,20 +66,12 @@ app.get('/urls/new', (req, res) => {
   const templateVars = {email: undefined};
 
   if (!user) {
-    // res.status(403).send('Please register or login first.');
-    res.redirect('/login');
+    res.status(403).send('Please register or login first.');
     return;
   };
 
   templateVars.email = users[userId].email;
   res.render('urls_new', templateVars);
-
-  // if (user) {
-  //   templateVars.email = users[userId].email;
-  //   return res.render('urls_new', templateVars);
-  // };
-
-  // res.redirect('/login');
 });
 
 
