@@ -48,13 +48,13 @@ app.get("/", (req, res) => {
   res.redirect('/login');
 });
 
-app.get('/hello', (req, res) => {
-  res.send('<html><body>Hello <b>World</b></body></html>\n');
-});
+// app.get('/hello', (req, res) => {
+//   res.send('<html><body>Hello <b>World</b></body></html>\n');
+// });
 
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
+// app.get("/urls.json", (req, res) => {
+//   res.json(urlDatabase);
+// });
 
 
 //--- MyURLs route ===> (urls_index).
@@ -86,12 +86,21 @@ app.get('/urls/new', (req, res) => {
 
   let templateVars = {email: undefined};
 
-  if (user) {
-    templateVars.email = users[userId].email;
-    return res.render('urls_new', templateVars);
+  if (!user) {
+    // res.status(403).send('Please register or login first.');
+    res.redirect('/login');
+    return;
   };
 
-  res.redirect('/login');
+  templateVars.email = users[userId].email;
+  res.render('urls_new', templateVars);
+
+  // if (user) {
+  //   templateVars.email = users[userId].email;
+  //   return res.render('urls_new', templateVars);
+  // };
+
+  // res.redirect('/login');
 });
 
 
@@ -101,11 +110,17 @@ app.get('/urls/:shortURL', (req, res) => {
   const user = users[userId];
 
   const userUrls = helpers.urlsForUser(userId, urlDatabase);
+
+  const urlObject = urlDatabase[req.params.shortURL];
+  if (!urlObject) {
+    res.status(403).send('This short URL does not exist.');
+    return;
+  }
   let templateVars = {
     user: user,
     email: undefined,
     shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL].longURL};
+    longURL: urlObject.longURL};
 
   if (!user) {
     res.status(403).send('Please register or login first.');
@@ -115,7 +130,7 @@ app.get('/urls/:shortURL', (req, res) => {
   const shortURL = req.params.shortURL;
   const urlFile = urlDatabase[shortURL];
 
-  if (urlFile.userId !== userId) {
+  if (urlFile && urlFile.userId !== userId) {
     res.status(403).send('Sorry - you do not have access to this Url.');
     return;
   }
@@ -133,7 +148,7 @@ app.get('/register', (req, res) => {
 
   if (user) {
     templateVars.email = users[userId].email;
-    res.redirect('urls');
+    return res.redirect('urls');
   };
 
   res.render('register', templateVars);
@@ -151,7 +166,7 @@ app.get('/login' , (req, res) => {
 
   if (user) {
     templateVars.email = users[userId].email;
-    res.redirect('urls');
+    return res.redirect('urls');
   };
 
   res.render('login', templateVars);
@@ -163,6 +178,14 @@ app.get('/login' , (req, res) => {
 
 //--- Create new shortURL
 app.post("/urls", (req, res) => {
+  const userId = req.session.user_id;
+  const user = users[userId];
+
+  if (!user) {
+    res.status(403).send('Please register or login first.');
+    return;
+  };
+
   const shortURL = helpers.generateRandomString();
   urlDatabase[shortURL] = {
     longURL: req.body.longURL,
@@ -175,6 +198,13 @@ app.post("/urls", (req, res) => {
 //--- Link to shortURL websites
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
+
+  const urlObject = urlDatabase[req.params.shortURL];
+  if (!urlObject) {
+    res.status(403).send('This short URL does not exist.');
+    return;
+  }
+
   const longURL = urlDatabase[shortURL].longURL;
 
   if (!urlDatabase[shortURL]) {
@@ -187,7 +217,7 @@ app.get("/u/:shortURL", (req, res) => {
 
 //--- Delete URL
 app.post('/urls/:shortURL/delete', (req, res) => {
-    const userId = req.session.user_id;
+  const userId = req.session.user_id;
   const user = users[userId];
 
   const userUrls = helpers.urlsForUser(userId, urlDatabase);
@@ -252,14 +282,14 @@ app.post('/login', (req, res) => {
 
   // If no valid email or password is entered
   if (!email || !password) {
-    res.status(400).send('Pleae enter a valid email and/or password.');
+    return res.status(400).send('Pleae enter a valid email and/or password.');
   };
 
   const user = helpers.authenticateUser(email, password, users);
 
   // If the user is not found, or the email and password don't match
   if (!user) {
-    res.status(403).send('Sorry: the email and password do not match.');
+    return res.status(403).send('Sorry: the email and password do not match.');
   };
 
   if (user) {
@@ -272,7 +302,7 @@ app.post('/login', (req, res) => {
 //--- Logout user
 app.post('/logout', (req, res) => {
   req.session = null;
-  res.redirect('/login');
+  res.redirect('/urls');
 });
 
 
@@ -281,24 +311,28 @@ app.post('/register', (req, res) => {
   const userId = helpers.generateRandomString();
   const email = req.body.email;
   const password = bcrypt.hashSync(req.body.password, 10);
+  console.log('Encrypted password is: ', password);
+
+  // const password = req.body.password;
+  // console.log('Unencrypted password is: ', password);
 
   // If no valid email or password is entered
-  if (!email || !password) {
-    res.status(400).send('Pleae enter a valid email and/or password.');
+  if (!email || !req.body.password) {
+    return res.status(400).send('Pleae enter a valid email and/or password.');
   };
 
   // If the user (based on email) is already in the database
   const userFound = helpers.getUserByEmail(email, users);
-    if (userFound) {
-      res.status(400).send('This user is already registered.');
-    };
+  if (userFound) {
+    return res.status(400).send('This user is already registered.');
+  };
 
   // Create a new user entry in the users database and return the userId.
   users[userId] = {
       userId,
       email,
       password
-    };
+  };
 
   req.session.user_id = userId;
   res.redirect('/urls');
